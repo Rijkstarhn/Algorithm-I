@@ -159,7 +159,31 @@ public class Board {
 
     // a board that is obtained by exchanging any pair of tiles
     public Board twin() {
-    	return this;
+    	int xa;
+    	int ya;
+    	int xb;
+    	int yb;
+    	if (this.board[0][0] != 0) {
+    		xa = 0;
+    		ya = 0;
+    		if (this.board[0][1] != 0) {
+    			xb = 0;
+    			yb = 1;
+    		}
+        	else {
+        		xb = 1;
+        		yb = 0;
+        	}
+    	}	
+    	else {
+    		xa = 0;
+    		ya = 1;
+    		xb = 1;
+    		yb = 0;
+    	}
+    	Board twin = new Board(this.copyBoard(this.board));
+    	twin.exch(xa, ya, xb, yb);
+    	return twin;
     }
 
     // unit testing (not graded)
@@ -192,6 +216,8 @@ public class Board {
         int[][] goal = {{1,2},{3,0}};
         Board goalBoard = new Board(goal);
         System.out.println(goalBoard.isGoal());
+        Board twinAnotherBoard = anotherBoard.twin();
+        System.out.println(twinAnotherBoard.toString());
     }
 
 }

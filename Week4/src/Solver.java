@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
@@ -11,25 +10,58 @@ public class Solver {
 	private ArrayList<SearchNode> solution;// the boards that have been delete
 	private Iterable<SearchNode> neighborsNodes;
 	private Iterable<Board> neighborsBoards;
+	private SearchNode initialNode;
+	private boolean solvable;
+	private SearchNode twinDelNode;
+	private ArrayList<SearchNode> twinSolution;
+	private Iterable<SearchNode> twinNeighborsNodes;
+	private Iterable<Board> twinNeighborsBoards;
+	private SearchNode twinInitialNode;
+	
 	
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initialBoard) {
+    	// corner case
     	if (initialBoard == null) throw new IllegalArgumentException("input cannot be null");
+    	
+    	// create the twinInitialBoard 
+    	Board twinInitialBoard = initialBoard.twin();
     	solution = new ArrayList<SearchNode>();
     	neighborsNodes = new ArrayList<SearchNode>();
-    	SearchNode initialNode = new SearchNode(initialBoard);
-    	MinPQ<SearchNode> minPQ = new MinPQ<SearchNode>();
-    	minPQ.insert(initialNode);
-    	do {
-			delNode = minPQ.delMin();
-			delNode.addDeleteNodes();
+    	twinSolution = new ArrayList<SearchNode>();
+    	twinNeighborsNodes = new ArrayList<SearchNode>();
+    	
+    	// Initialize the initialNode & twinInitialNode and their minPQ
+    	initialNode = new SearchNode(initialBoard);
+    	delNode = initialNode;
+    	twinInitialNode = new SearchNode(twinInitialBoard);
+    	twinDelNode = twinInitialNode;
+    	
+    	//solve
+    	while (!delNode.board.isGoal() && !twinDelNode.board.isGoal()) {
+			delNode.addDeleteNodes();// Add the delNode to the Solver.solution
+			twinDelNode.addTwinDeleteNodes();
 			this.numOfMoves ++;
 			neighborsBoards = delNode.board.neighbors();
+			twinNeighborsBoards = twinDelNode.board.neighbors();
 			this.neighborsNodes = convertBoardsToNodes(neighborsBoards);
+			this.twinNeighborsNodes = convertBoardsToNodes(twinNeighborsBoards);
+			MinPQ<SearchNode> minPQ = new MinPQ<SearchNode>();
+			MinPQ<SearchNode> twinMinPQ = new MinPQ<SearchNode>();
 			for (SearchNode node : neighborsNodes) {
 				if (node.notRepeat()) minPQ.insert(node);
 			}
-		} while (!delNode.board.isGoal());
+			for (SearchNode node : twinNeighborsNodes) {
+				if (node.notRepeat()) twinMinPQ.insert(node);
+			}
+			delNode = minPQ.delMin();
+			twinDelNode = twinMinPQ.delMin();
+    	}
+    	// add the final goal board to the Solver.solution
+    	delNode.addDeleteNodes();
+    	this.numOfMoves ++;
+    	if (delNode.board.isGoal()) this.solvable = true;
+    	else this.solvable = false;
     }
     
     private Iterable<SearchNode> convertBoardsToNodes(Iterable<Board> Boards){
@@ -40,7 +72,7 @@ public class Solver {
     	return neighborsNodes;
     }
     
-    class SearchNode implements Comparable<SearchNode>{
+    private class SearchNode implements Comparable<SearchNode>{
     	Board board;
     	int priority;
     	int numOfMoves;
@@ -66,6 +98,12 @@ public class Solver {
         	Solver.this.solution.add(this);
         	return Solver.this.solution;
         }
+        
+        private Iterable<SearchNode> addTwinDeleteNodes(){
+        	Solver.this.twinSolution.add(this);
+        	return Solver.this.twinSolution;
+        }
+        
     	
     	public int compareTo(SearchNode x) {
 			// since the smaller priority will be in the head of the MinPQ, so when...
@@ -78,7 +116,7 @@ public class Solver {
 
     // is the initial board solvable? (see below)
     public boolean isSolvable() {
-    	return true;
+    	return this.solvable;
     }
 
     // min number of moves to solve initial board
@@ -105,9 +143,14 @@ public class Solver {
                 tiles[i][j] = in.readInt();
         Board initial = new Board(tiles);
     	Solver solver = new Solver(initial);
-    	StdOut.println("Minimum number of moves = " + solver.moves());
-        for (Board board : solver.solution())
-            StdOut.println(board);
+    	// print solution to standard output
+        if (!solver.isSolvable())
+            StdOut.println("No solution possible");
+        else {
+            StdOut.println("Minimum number of moves = " + solver.moves());
+            for (Board board : solver.solution())
+                StdOut.println(board);
+        }
     }
 
 }
