@@ -49,10 +49,12 @@ public class Solver {
 			MinPQ<SearchNode> minPQ = new MinPQ<SearchNode>();
 			MinPQ<SearchNode> twinMinPQ = new MinPQ<SearchNode>();
 			for (SearchNode node : neighborsNodes) {
-				if (node.notRepeat()) minPQ.insert(node);
+				if (this.numOfMoves < 2) minPQ.insert(node);
+				else if (node.notRepeat()) minPQ.insert(node);
 			}
 			for (SearchNode node : twinNeighborsNodes) {
-				if (node.notRepeat()) twinMinPQ.insert(node);
+				if (this.numOfMoves < 2) twinMinPQ.insert(node);
+				else if (node.twinNotRepeat()) twinMinPQ.insert(node);
 			}
 			delNode = minPQ.delMin();
 			twinDelNode = twinMinPQ.delMin();
@@ -64,6 +66,7 @@ public class Solver {
     	else this.solvable = false;
     }
     
+    // convert the Board to SearchNode for processing convenience
     private Iterable<SearchNode> convertBoardsToNodes(Iterable<Board> Boards){
     	ArrayList<SearchNode> neighborsNodes = new ArrayList<SearchNode>();
     	for (Board b : Boards) {
@@ -71,6 +74,7 @@ public class Solver {
     	}
     	return neighborsNodes;
     }
+    
     
     private class SearchNode implements Comparable<SearchNode>{
     	Board board;
@@ -87,9 +91,14 @@ public class Solver {
     	
     	// check if the Node has repeat ones in the ArrayList<SearchNode> solution
     	private boolean notRepeat() {
-        	for (SearchNode nodeInSolution : Solver.this.solution) {
-    			if (nodeInSolution.board.equals(this.board)) return false;
-    		}	
+    		if (Solver.this.solution.get(Solver.this.solution.size()-1).board.equals(this.board)) return false;
+    		if (Solver.this.solution.get(Solver.this.solution.size()-2).board.equals(this.board)) return false;
+        	return true;
+        }
+    	
+    	private boolean twinNotRepeat() {
+    		if (Solver.this.twinSolution.get(Solver.this.twinSolution.size()-1).board.equals(this.board)) return false;
+    		if (Solver.this.twinSolution.get(Solver.this.twinSolution.size()-2).board.equals(this.board)) return false;
         	return true;
         }
     	

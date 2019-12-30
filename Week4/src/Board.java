@@ -105,6 +105,7 @@ public class Board {
 
     // does this board equal y?
     public boolean equals(Object y) {
+    	if (y == null || this == null) return false;
     	Board yBoard = (Board)y;
     	if (this.dimension != yBoard.dimension) return false;
     	for (int i = 0; i < this.dimension; i++) {
