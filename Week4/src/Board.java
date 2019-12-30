@@ -6,10 +6,10 @@ import edu.princeton.cs.algs4.In;
 
 public class Board {
 
-	private int[][] board;
-	private int dimension;
-	private int hammingDistance;
-	private boolean[][] hamming;
+	private final int[][] board;
+	private final int dimension;
+	private final int hammingDistance;
+	private final boolean[][] hamming;
 	private int zeroX;
 	private int zeroY;
 	
@@ -27,6 +27,7 @@ public class Board {
 				}
 			}
 		}
+    	hammingDistance = hamming();
     }
                                            
     // string representation of this board
@@ -49,16 +50,17 @@ public class Board {
 
     // number of tiles out of place
     public int hamming() {
+    	int count = 0;
     	for (int i = 0; i < this.board.length; i++) {
 			for (int j = 0; j < this.board[0].length; j++) {
 				if (this.board[i][j] == 0) continue;
 				if (this.board[i][j] != pos(i, j)) {
-					this.hammingDistance ++;
+					count ++;
 					this.hamming[i][j] = true;
 				}
 			}
 		}
-    	return this.hammingDistance;
+    	return count;
     }
     
     // the position of the entry in the array, e.g. 
@@ -106,6 +108,7 @@ public class Board {
     // does this board equal y?
     public boolean equals(Object y) {
     	if (y == null || this == null) return false;
+    	if (this.getClass() != y.getClass()) return false;
     	Board yBoard = (Board)y;
     	if (this.dimension != yBoard.dimension) return false;
     	for (int i = 0; i < this.dimension; i++) {
@@ -197,28 +200,31 @@ public class Board {
             for (int j = 0; j < n; j++)
                 tiles[i][j] = in.readInt();
         Board initial = new Board(tiles);
-        System.out.println(initial.dimension);
-        System.out.println(initial.toString());
-//        System.out.println(initial.hamming());
-        System.out.println(initial.manhattan());
-        Iterable<Board> xArrayList = initial.neighbors();
-        Board copyBoard = new Board(initial.copyBoard(initial.board));
-        int[][] anotherboard = {{1,2,0},{3,8,6},{7,5,4}};
-        Board anotherBoard = new Board(anotherboard);
-        System.out.println(anotherBoard.toString());
-        System.out.println(initial.equals(anotherBoard));
-        System.out.println(copyBoard.toString());
-        System.out.println(initial.equals(copyBoard));
-        System.out.println("------------------");
-        for(Board b : xArrayList) {
-        	System.out.println(b.toString());
-        }
-        System.out.println(anotherBoard.isGoal());
-        int[][] goal = {{1,2},{3,0}};
-        Board goalBoard = new Board(goal);
-        System.out.println(goalBoard.isGoal());
-        Board twinAnotherBoard = anotherBoard.twin();
-        System.out.println(twinAnotherBoard.toString());
+        System.out.println(initial.hamming());
+        System.out.println(initial.hamming());
+//        System.out.println(initial.dimension);
+//        System.out.println(initial.toString());
+////        System.out.println(initial.hamming());
+//        System.out.println(initial.manhattan());
+//        Iterable<Board> xArrayList = initial.neighbors();
+//        Board copyBoard = new Board(initial.copyBoard(initial.board));
+//        int[][] anotherboard = {{1,2,0},{3,8,6},{7,5,4}};
+//        Board anotherBoard = new Board(anotherboard);
+//        System.out.println(anotherBoard.toString());
+//        System.out.println(initial.equals(anotherBoard));
+//        System.out.println(copyBoard.toString());
+//        System.out.println(initial.equals(copyBoard));
+//        System.out.println("------------------");
+//        for(Board b : xArrayList) {
+//        	System.out.println(b.toString());
+//        }
+//        System.out.println(anotherBoard.isGoal());
+//        int[][] goal = {{1,2},{3,0}};
+//        Board goalBoard = new Board(goal);
+//        System.out.println(goalBoard.isGoal());
+//        Board twinAnotherBoard = anotherBoard.twin();
+//        System.out.println(twinAnotherBoard.toString());
+//        System.out.println(twinAnotherBoard.getClass());
     }
 
 }
