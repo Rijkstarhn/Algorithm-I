@@ -1,23 +1,16 @@
 import java.util.ArrayList;
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
+import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 public class Solver {
 	
 	private int numOfMoves;
-	private SearchNode delNode;
-	private ArrayList<SearchNode> solution;// the boards that have been delete
-	private Iterable<SearchNode> neighborsNodes;
-	private Iterable<Board> neighborsBoards;
-	private SearchNode initialNode;
 	private boolean solvable;
+	private SearchNode delNode;
 	private SearchNode twinDelNode;
-	private ArrayList<SearchNode> twinSolution;
-	private Iterable<SearchNode> twinNeighborsNodes;
-	private Iterable<Board> twinNeighborsBoards;
-	private SearchNode twinInitialNode;
-	
+	private Stack<Board> solution;
 	
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initialBoard) {
@@ -26,51 +19,55 @@ public class Solver {
     	
     	// create the twinInitialBoard 
     	Board twinInitialBoard = initialBoard.twin();
-    	solution = new ArrayList<SearchNode>();
-    	neighborsNodes = new ArrayList<SearchNode>();
-    	twinSolution = new ArrayList<SearchNode>();
-    	twinNeighborsNodes = new ArrayList<SearchNode>();
+    	solution = new Stack<Board>();
     	
-    	// Initialize the initialNode & twinInitialNode and their minPQ
-    	initialNode = new SearchNode(initialBoard);
+    	// Initialize the original & twin
+    	SearchNode initialNode = new SearchNode(initialBoard,0,null);
+    	SearchNode twinInitialNode = new SearchNode(twinInitialBoard,0,null);
+    	Iterable<SearchNode> neighborsNodes = new ArrayList<SearchNode>();
+    	Iterable<SearchNode> twinNeighborsNodes = new ArrayList<SearchNode>();
     	delNode = initialNode;
-    	twinInitialNode = new SearchNode(twinInitialBoard);
     	twinDelNode = twinInitialNode;
+    	MinPQ<SearchNode> minPQ = new MinPQ<SearchNode>();
+		MinPQ<SearchNode> twinMinPQ = new MinPQ<SearchNode>();
     	
     	//solve
     	while (!delNode.board.isGoal() && !twinDelNode.board.isGoal()) {
-			delNode.addDeleteNodes();// Add the delNode to the Solver.solution
-			twinDelNode.addTwinDeleteNodes();
-			this.numOfMoves ++;
-			neighborsBoards = delNode.board.neighbors();
-			twinNeighborsBoards = twinDelNode.board.neighbors();
-			this.neighborsNodes = convertBoardsToNodes(neighborsBoards);
-			this.twinNeighborsNodes = convertBoardsToNodes(twinNeighborsBoards);
-			MinPQ<SearchNode> minPQ = new MinPQ<SearchNode>();
-			MinPQ<SearchNode> twinMinPQ = new MinPQ<SearchNode>();
+			//this.numOfMoves ++; we cannot use ++ to count the moves because with A algorithm we may ÈÆÂ· because all the undequeued nodes are stored in the minPQ
+			Iterable<Board> neighborsBoards = delNode.board.neighbors();
+			Iterable<Board> twinNeighborsBoards = twinDelNode.board.neighbors();
+			neighborsNodes = convertBoardsToNodes(neighborsBoards, delNode.moves, delNode);
+			twinNeighborsNodes = convertBoardsToNodes(twinNeighborsBoards, twinDelNode.moves, twinDelNode);
+			
 			for (SearchNode node : neighborsNodes) {
-				if (this.numOfMoves < 2) minPQ.insert(node);
-				else if (node.notRepeat()) minPQ.insert(node);
+				if (node.notRepeat()) minPQ.insert(node);
 			}
 			for (SearchNode node : twinNeighborsNodes) {
-				if (this.numOfMoves < 2) twinMinPQ.insert(node);
-				else if (node.twinNotRepeat()) twinMinPQ.insert(node);
+				if (node.twinNotRepeat()) twinMinPQ.insert(node);
 			}
+			// wipe the unused nodes for saving memory ( avoid lotering)
 			delNode = minPQ.delMin();
 			twinDelNode = twinMinPQ.delMin();
     	}
     	// add the final goal board to the Solver.solution
-    	delNode.addDeleteNodes();
-    	this.numOfMoves ++;
+    	//this.numOfMoves ++;
     	if (delNode.board.isGoal()) this.solvable = true;
     	else this.solvable = false;
+    	
+    	// calculate numOfMoves
+    	while (this.delNode != null) {
+    		solution.push(delNode.board);
+    		numOfMoves ++;
+    		delNode = delNode.prevNode;
+    	}
     }
     
     // convert the Board to SearchNode for processing convenience
-    private Iterable<SearchNode> convertBoardsToNodes(Iterable<Board> Boards){
+    private Iterable<SearchNode> convertBoardsToNodes(Iterable<Board> Boards, int previousMoves, SearchNode preNode){
     	ArrayList<SearchNode> neighborsNodes = new ArrayList<SearchNode>();
+    	previousMoves ++;
     	for (Board b : Boards) {
-    		neighborsNodes.add(new SearchNode(b));
+    		neighborsNodes.add(new SearchNode(b, previousMoves, preNode));
     	}
     	return neighborsNodes;
     }
@@ -79,40 +76,34 @@ public class Solver {
     private class SearchNode implements Comparable<SearchNode>{
     	Board board;
     	int priority;
-    	int numOfMoves;
+    	int moves;
     	SearchNode prevNode;
     	
-    	public SearchNode(Board inputBoard) {
-    		this.board = inputBoard;
-    		prevNode = Solver.this.delNode;
-    		this.numOfMoves = Solver.this.numOfMoves;
-    		priority = inputBoard.manhattan() + this.numOfMoves;
+    	public SearchNode(Board inputBoard, int previousMoves, SearchNode preNode) {
+    		board = inputBoard;
+    		prevNode = preNode;
+    		moves = previousMoves ++;
+    		priority = inputBoard.manhattan() + this.moves;
     	}
     	
-    	// check if the Node has repeat ones in the ArrayList<SearchNode> solution
+    	// check if the Node is identical to the solutions
     	private boolean notRepeat() {
-    		if (Solver.this.solution.get(Solver.this.solution.size()-1).board.equals(this.board)) return false;
-    		if (Solver.this.solution.get(Solver.this.solution.size()-2).board.equals(this.board)) return false;
-        	return true;
+    		SearchNode stepNode = Solver.this.delNode;
+    		while (stepNode != null) {
+    			if (this.board.equals(stepNode.board)) return false;
+    			stepNode = stepNode.prevNode;
+    		}
+    		return true;
         }
     	
     	private boolean twinNotRepeat() {
-    		if (Solver.this.twinSolution.get(Solver.this.twinSolution.size()-1).board.equals(this.board)) return false;
-    		if (Solver.this.twinSolution.get(Solver.this.twinSolution.size()-2).board.equals(this.board)) return false;
-        	return true;
+    		SearchNode stepNode = Solver.this.twinDelNode;
+    		while (stepNode != null) {
+    			if (this.board.equals(stepNode.board)) return false;
+    			stepNode = stepNode.prevNode;
+    		}
+    		return true;
         }
-    	
-    	// get the deleted boards
-        private Iterable<SearchNode> addDeleteNodes(){
-        	Solver.this.solution.add(this);
-        	return Solver.this.solution;
-        }
-        
-        private Iterable<SearchNode> addTwinDeleteNodes(){
-        	Solver.this.twinSolution.add(this);
-        	return Solver.this.twinSolution;
-        }
-        
     	
     	public int compareTo(SearchNode x) {
 			// since the smaller priority will be in the head of the MinPQ, so when...
@@ -130,15 +121,11 @@ public class Solver {
 
     // min number of moves to solve initial board
     public int moves() {
-    	return this.numOfMoves - 1;// do not include the initial board, so - 1
+    	return numOfMoves - 1;// do not include the initial board, so - 1
     }
 
     // sequence of boards in a shortest solution
     public Iterable<Board> solution() {
-    	ArrayList<Board> solution = new ArrayList<Board>();
-    	for (SearchNode node : this.solution) {
-    		solution.add(node.board);
-    	}
     	return solution;
     }
 

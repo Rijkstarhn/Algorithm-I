@@ -1,4 +1,3 @@
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -6,28 +5,25 @@ import edu.princeton.cs.algs4.In;
 
 public class Board {
 
-	private final int[][] board;
+	private final int[] board;
 	private final int dimension;
-	private final int hammingDistance;
-	private final boolean[][] hamming;
 	private int zeroX;
 	private int zeroY;
+	
 	
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
     public Board(int[][] tiles) {
-    	this.board = tiles;
+    	this.board = new int[tiles.length * tiles.length];
     	this.dimension = tiles.length;
-    	this.hamming = new boolean[this.dimension][this.dimension];
-    	for (int i = 0; i < this.board.length; i++) {
-			for (int j = 0; j < this.board.length; j++) {
-				if (board[i][j] == 0) {
+    	for (int i = 0; i < tiles.length; i++) 
+			for (int j = 0; j < tiles.length; j++) {
+				board[pos(i, j)] = tiles[i][j];
+				if (tiles[i][j] == 0) {
 					zeroX = i;
 					zeroY = j;
 				}
 			}
-		}
-    	hammingDistance = hamming();
     }
                                            
     // string representation of this board
@@ -35,7 +31,7 @@ public class Board {
     	String outString = Integer.toString(this.dimension) + "\r\n";
     	for (int i = 0; i < this.dimension; i++) {
 			for (int j = 0; j < this.dimension; j++) {
-				outString += Integer.toString(this.board[i][j]);
+				outString += Integer.toString(this.board[pos(i, j)]);
 				outString += " ";
 			}
 			outString += "\r\n"; 
@@ -51,12 +47,11 @@ public class Board {
     // number of tiles out of place
     public int hamming() {
     	int count = 0;
-    	for (int i = 0; i < this.board.length; i++) {
-			for (int j = 0; j < this.board[0].length; j++) {
-				if (this.board[i][j] == 0) continue;
-				if (this.board[i][j] != pos(i, j)) {
+    	for (int i = 0; i < this.dimension; i++) {
+			for (int j = 0; j < this.dimension; j++) {
+				if (this.board[pos(i, j)] == 0) continue;
+				if (this.board[pos(i, j)] != goalPos(i, j)) {
 					count ++;
-					this.hamming[i][j] = true;
 				}
 			}
 		}
@@ -65,22 +60,26 @@ public class Board {
     
     // the position of the entry in the array, e.g. 
     private int pos(int i, int j) {
-    	return this.dimension()* i + j+1;
+    	return this.dimension* i + j;
+    }
+    
+    private int goalPos(int i, int j) {
+    	return this.dimension * i + j + 1;
     }
 
     // sum of Manhattan distances between tiles and goal
     public int manhattan() {
-    	int manhattanDistance = 0;
-    	this.hamming();// Must hamming first, or the manhattanDistance will be 0 because we need the hamming[i][j] for manhattanDistance calculation
-    	for (int i = 0; i < this.hamming.length; i++) {
-			for (int j = 0; j < this.board.length; j++) {
-				if (this.board[i][j] == 0) continue;
-				if (this.hamming[i][j]) {
-					manhattanDistance += Math.abs(this.posX(this.board[i][j] - 1) - i) + Math.abs(this.posY(this.board[i][j] - 1)-j);// this.board[i][j] - 1 because the entry of goal board starts from 1 instead of 0 
+    	int count = 0;
+    	// Must hamming first, or the manhattanDistance will be 0 because we need the hamming[i][j] for manhattanDistance calculation
+    	for (int i = 0; i < this.dimension; i++) {
+			for (int j = 0; j < this.dimension; j++) {
+				if (this.board[pos(i, j)] == 0) continue;
+				if (this.board[pos(i, j)] != goalPos(i, j)) {
+					count += Math.abs(this.posX(this.board[pos(i, j)] - 1) - i) + Math.abs(this.posY(this.board[pos(i, j)] - 1)-j);// this.board[i][j] - 1 because the entry of goal board starts from 1 instead of 0 
 				}
 			}
 		}
-    	return manhattanDistance;
+    	return count;
     }
     
     // the X position of the entry
@@ -88,21 +87,19 @@ public class Board {
     	return entry / this.dimension;
     }
 
- // the Y position of the entry
+    // the Y position of the entry
     private int posY(int entry) {
     	return entry % this.dimension;
     }
     
     // is this board the goal board?
     public boolean isGoal() {
-    	int[][] goal = new int[this.board.length][this.board.length];
-    	for (int i = 0; i < goal.length; i++) {
-			for (int j = 0; j < goal.length; j++) {
-					goal[i][j] = i * this.dimension + j + 1;
-			}
+    	int[] goal = new int[this.board.length];
+    	for (int i = 0; i < goal.length - 1; i++) {
+			goal[i] = i + 1;
 		}
-    	goal[goal.length -1][goal.length -1] = 0;
-    	return this.equals(new Board(goal));
+    	goal[goal.length - 1] = 0;
+    	return Arrays.equals(this.board, goal);
     }
 
     // does this board equal y?
@@ -110,55 +107,63 @@ public class Board {
     	if (y == null || this == null) return false;
     	if (this.getClass() != y.getClass()) return false;
     	Board yBoard = (Board)y;
-    	if (this.dimension != yBoard.dimension) return false;
-    	for (int i = 0; i < this.dimension; i++) {
-			if (!Arrays.equals(yBoard.board[i], this.board[i])) return false;
-		}
+    	if (this.board.length != yBoard.board.length) return false;
+    	if (!Arrays.equals(this.board, yBoard.board)) return false;
     	return true;
-    }
-    
-    private int[][] copyBoard(int[][] board){
-    	int[][] copy = new int[board.length][];
-    	for (int i = 0; i < board.length; i++) {
-			copy[i] = board[i].clone();
-		}
-    	return copy;
     }
     
     // all neighboring boards
     public Iterable<Board> neighbors(){
     	ArrayList<Board> neighbors = new ArrayList<Board>();
     	if (zeroX - 1 >= 0) {
-    		Board neighbor = new Board(this.copyBoard(this.board));
-    		neighbor.exch(zeroX, zeroY, zeroX - 1, zeroY);
-    		neighbor = new Board(neighbor.board);// use the copy of thisBoard's board array to initialize the neighbor board
+    		int[] neighborOneD = Arrays.copyOf(this.board, this.board.length);
+    		int[][] neighborTwoD = convertToTwoD(neighborOneD);
+    		exch(neighborTwoD, zeroX, zeroY, zeroX - 1, zeroY); // exch first, or the ZeroX and ZeroY will be wrong ( be the before exch Board's ZeroX and ZeroY)
+    		Board neighbor = new Board(neighborTwoD);// use the copy of thisBoard's board array to initialize the neighbor board
     		neighbors.add(neighbor);
     	}
     	if (zeroX + 1 < this.dimension) {
-    		Board neighbor = new Board(this.copyBoard(this.board));
-    		neighbor.exch(zeroX, zeroY, zeroX + 1, zeroY);
-    		neighbor = new Board(neighbor.board);// use the copy of thisBoard's board array to initialize the neighbor board
+    		int[] neighborOneD = Arrays.copyOf(this.board, this.board.length);
+    		int[][] neighborTwoD = convertToTwoD(neighborOneD);
+    		exch(neighborTwoD, zeroX, zeroY, zeroX + 1, zeroY); // exch first, or the ZeroX and ZeroY will be wrong ( be the before exch Board's ZeroX and ZeroY)
+    		Board neighbor = new Board(neighborTwoD);// use the copy of thisBoard's board array to initialize the neighbor board
     		neighbors.add(neighbor);
     	}
     	if (zeroY - 1 >= 0) {
-    		Board neighbor = new Board(this.copyBoard(this.board));
-    		neighbor.exch(zeroX, zeroY, zeroX, zeroY - 1);
-    		neighbor = new Board(neighbor.board);// use the copy of thisBoard's board array to initialize the neighbor board
+    		int[] neighborOneD = Arrays.copyOf(this.board, this.board.length);
+    		int[][] neighborTwoD = convertToTwoD(neighborOneD);
+    		exch(neighborTwoD, zeroX, zeroY - 1, zeroX, zeroY); // exch first, or the ZeroX and ZeroY will be wrong ( be the before exch Board's ZeroX and ZeroY)
+    		Board neighbor = new Board(neighborTwoD);// use the copy of thisBoard's board array to initialize the neighbor board
     		neighbors.add(neighbor);
     	}
     	if (zeroY + 1 < this.dimension) {
-    		Board neighbor = new Board(this.copyBoard(this.board));
-    		neighbor.exch(zeroX, zeroY, zeroX, zeroY + 1);
-    		neighbor = new Board(neighbor.board);// use the copy of thisBoard's board array to initialize the neighbor board
+    		int[] neighborOneD = Arrays.copyOf(this.board, this.board.length);
+    		int[][] neighborTwoD = convertToTwoD(neighborOneD);
+    		exch(neighborTwoD, zeroX, zeroY + 1, zeroX, zeroY); // exch first, or the ZeroX and ZeroY will be wrong ( be the before exch Board's ZeroX and ZeroY)
+    		Board neighbor = new Board(neighborTwoD);// use the copy of thisBoard's board array to initialize the neighbor board
     		neighbors.add(neighbor);
     	}
     	return neighbors;
     }
     
-    private void exch(int xa, int ya, int xb, int yb) {
-    	int mid = board[xa][ya];
-    	board[xa][ya] = board[xb][yb];
-    	board[xb][yb] = mid;
+    
+    
+    // Convert from 1D array to 2D array
+    private int[][] convertToTwoD(int[] board) {
+    	int [][] twoDForm = new int[this.dimension][this.dimension];
+    	for (int k = 0; k < board.length; k++) {
+			int i = k / this.dimension;
+			int j = k % this.dimension;
+			twoDForm[i][j] = board[k];
+		}
+    	return twoDForm;
+    }
+    
+    private void exch(int[][] copyboard, int xa, int ya, int xb, int yb) {
+    	
+    	int mid = copyboard[xa][ya];
+    	copyboard[xa][ya] = copyboard[xb][yb];
+    	copyboard[xb][yb] = mid;
     }
 
     // a board that is obtained by exchanging any pair of tiles
@@ -167,10 +172,10 @@ public class Board {
     	int ya;
     	int xb;
     	int yb;
-    	if (this.board[0][0] != 0) {
+    	if (this.board[pos(0, 0)] != 0) {
     		xa = 0;
     		ya = 0;
-    		if (this.board[0][1] != 0) {
+    		if (this.board[pos(0, 1)] != 0) {
     			xb = 0;
     			yb = 1;
     		}
@@ -185,8 +190,10 @@ public class Board {
     		xb = 1;
     		yb = 0;
     	}
-    	Board twin = new Board(this.copyBoard(this.board));
-    	twin.exch(xa, ya, xb, yb);
+    	int[] copy = Arrays.copyOf(this.board, this.board.length);
+    	int[][] twinboard = convertToTwoD(copy);
+    	exch(twinboard, xa, ya, xb, yb);
+    	Board twin = new Board(twinboard);
     	return twin;
     }
 
@@ -202,29 +209,16 @@ public class Board {
         Board initial = new Board(tiles);
         System.out.println(initial.hamming());
         System.out.println(initial.hamming());
-//        System.out.println(initial.dimension);
-//        System.out.println(initial.toString());
-////        System.out.println(initial.hamming());
-//        System.out.println(initial.manhattan());
-//        Iterable<Board> xArrayList = initial.neighbors();
-//        Board copyBoard = new Board(initial.copyBoard(initial.board));
-//        int[][] anotherboard = {{1,2,0},{3,8,6},{7,5,4}};
-//        Board anotherBoard = new Board(anotherboard);
-//        System.out.println(anotherBoard.toString());
-//        System.out.println(initial.equals(anotherBoard));
-//        System.out.println(copyBoard.toString());
-//        System.out.println(initial.equals(copyBoard));
-//        System.out.println("------------------");
-//        for(Board b : xArrayList) {
-//        	System.out.println(b.toString());
-//        }
-//        System.out.println(anotherBoard.isGoal());
-//        int[][] goal = {{1,2},{3,0}};
-//        Board goalBoard = new Board(goal);
-//        System.out.println(goalBoard.isGoal());
-//        Board twinAnotherBoard = anotherBoard.twin();
-//        System.out.println(twinAnotherBoard.toString());
-//        System.out.println(twinAnotherBoard.getClass());
+        System.out.println(initial.manhattan());
+        System.out.println(initial.manhattan());
+        System.out.println(initial.toString());
+        System.out.println(initial.isGoal());
+        Iterable<Board> xArrayList = initial.neighbors();
+        for (Board board : xArrayList) {
+        	System.out.println(board.toString());
+        }
+        Board twin = initial.twin();
+        System.out.println("twin\n" + twin.toString());
     }
 
 }
