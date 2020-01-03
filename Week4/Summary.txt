@@ -1,3 +1,5 @@
 1. The understanding of memory
 2. The understanding of loitering
 3. The use of interface return type
+4. Defensive copying
+5. Usage of 'final'
