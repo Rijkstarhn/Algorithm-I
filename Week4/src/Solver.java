@@ -11,6 +11,7 @@ public class Solver {
 	private SearchNode delNode;
 	private SearchNode twinDelNode;
 	private Stack<Board> solution;
+//	public int equalsCount;
 	
     // find a solution to the initial board (using the A* algorithm)
     public Solver(Board initialBoard) {
@@ -33,7 +34,7 @@ public class Solver {
     	
     	//solve
     	while (!delNode.board.isGoal() && !twinDelNode.board.isGoal()) {
-			//this.numOfMoves ++; we cannot use ++ to count the moves because with A algorithm we may ÈÆÂ· because all the undequeued nodes are stored in the minPQ
+			//this.numOfMoves ++; we cannot use ++ to count the moves because with A algorithm we may detour because all the undequeued nodes are stored in the minPQ
 			Iterable<Board> neighborsBoards = delNode.board.neighbors();
 			Iterable<Board> twinNeighborsBoards = twinDelNode.board.neighbors();
 			neighborsNodes = convertBoardsToNodes(neighborsBoards, delNode.moves, delNode);
@@ -51,14 +52,21 @@ public class Solver {
     	}
     	// add the final goal board to the Solver.solution
     	//this.numOfMoves ++;
-    	if (delNode.board.isGoal()) this.solvable = true;
-    	else this.solvable = false;
-    	
-    	// calculate numOfMoves
-    	while (this.delNode != null) {
-    		solution.push(delNode.board);
-    		numOfMoves ++;
-    		delNode = delNode.prevNode;
+    	if (delNode.board.isGoal()) {
+    		this.solvable = true;
+    		// calculate numOfMoves
+        	while (this.delNode != null) {
+        		solution.push(delNode.board);
+        		delNode = delNode.prevNode;
+        	}
+        	numOfMoves = solution.size();
+        	twinDelNode = null;
+    	}
+    	else {
+    		this.solvable = false;
+    		// free the useless memory
+    		twinDelNode = null;
+    		delNode = null;
     	}
     }
     
@@ -88,21 +96,26 @@ public class Solver {
     	
     	// check if the Node is identical to the solutions
     	private boolean notRepeat() {
-    		SearchNode stepNode = Solver.this.delNode;
-    		while (stepNode != null) {
-    			if (this.board.equals(stepNode.board)) return false;
-    			stepNode = stepNode.prevNode;
-    		}
-    		return true;
+//    		equalsCount ++;// test the times equals() run
+    		if (this.moves == 1) return true;
+    		return (this.board.equals(Solver.this.delNode.prevNode.board))? false : true;
+//    		SearchNode stepNode = Solver.this.delNode;
+//    		while (stepNode != null) {
+//    			if (this.board.equals(stepNode.board)) return false;
+//    			stepNode = stepNode.prevNode;
+//    		}
+//    		return true;
         }
     	
     	private boolean twinNotRepeat() {
-    		SearchNode stepNode = Solver.this.twinDelNode;
-    		while (stepNode != null) {
-    			if (this.board.equals(stepNode.board)) return false;
-    			stepNode = stepNode.prevNode;
-    		}
-    		return true;
+    		if (this.moves == 1) return true;
+    		return (this.board.equals(Solver.this.twinDelNode.prevNode.board))? false : true;
+//    		SearchNode stepNode = Solver.this.twinDelNode;
+//    		while (stepNode != null) {
+//    			if (this.board.equals(stepNode.board)) return false;
+//    			stepNode = stepNode.prevNode;
+//    		}
+//    		return true;
         }
     	
     	public int compareTo(SearchNode x) {
@@ -121,12 +134,12 @@ public class Solver {
 
     // min number of moves to solve initial board
     public int moves() {
-    	return numOfMoves - 1;// do not include the initial board, so - 1
+    	return solvable? numOfMoves - 1 : -1;// do not include the initial board, so - 1
     }
 
     // sequence of boards in a shortest solution
     public Iterable<Board> solution() {
-    	return solution;
+    	return solvable? solution : null;
     }
 
     // test client (see below) 
@@ -147,6 +160,7 @@ public class Solver {
             for (Board board : solver.solution())
                 StdOut.println(board);
         }
+//        System.out.println(solver.equalsCount);
     }
 
 }
