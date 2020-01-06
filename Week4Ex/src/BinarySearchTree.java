@@ -1,3 +1,4 @@
+import edu.princeton.cs.algs4.Queue;
 
 public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 	
@@ -128,9 +129,19 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 		else return node.key;
 	}
 	
-//	public Iterable<Key> iterator() {
-//		
-//	}
+	public Iterable<Key> keys() {
+		Queue<Key> q = new Queue<Key>();
+		inOrder(root,q);
+		return q;
+	}
+	
+	private void inOrder(Node node, Queue<Key> q) {
+		if (node == null) return;
+		inOrder(node.left, q);
+		q.enqueue(node.key);
+		inOrder(node.right,q);
+	}
+	
 	
 	public static void main(String[] args) {
 		BinarySearchTree<Integer, Integer> testBST = new BinarySearchTree<Integer, Integer>();
@@ -152,5 +163,8 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 		System.out.println(testBST.size());
 		System.out.println(testBST.rank(0));
 		System.out.println(testBST.select(3));
+		for (Integer k : testBST.keys()) {
+			System.out.println(k);
+		}
 	}
 }
