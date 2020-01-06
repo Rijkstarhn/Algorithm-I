@@ -104,6 +104,30 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 		
 	}
 	
+	// Return the number of keys in the symbol table strictly less than key
+	public int rank(Key key) {
+		return rank(root, key);
+	}
+	
+	private int rank(Node node, Key key) {
+		if (node == null) return 0;
+		if (key.compareTo(node.key) < 0) return rank(node.left, key);
+		else if (key.compareTo(node.key) > 0) return 1 + size(node.left) + rank(node.right, key);
+		else return size(node.left);
+	}
+	
+	// return the (k+1)st smallest key in the symbol table.
+	public Key select(int rank) {
+		return select(root, rank);
+	}
+	
+	private Key select(Node node, int rank) {
+		if (node == null) return null;
+		if (rank < size(node.left)) return select(node.left, rank);
+		else if (rank > size(node.left)) return select(node.right, rank - size(node.left) - 1);
+		else return node.key;
+	}
+	
 //	public Iterable<Key> iterator() {
 //		
 //	}
@@ -126,5 +150,7 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 		System.out.println(testBST.ceiling(19));
 		System.out.println(testBST.get(15));
 		System.out.println(testBST.size());
+		System.out.println(testBST.rank(0));
+		System.out.println(testBST.select(3));
 	}
 }
