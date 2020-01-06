@@ -29,8 +29,8 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 	public Value get(Key key) {
 		Node currentNode = root;
 		while(currentNode != null) {
-			if (key.compareTo(currentNode.key) < 0) currentNode = root.left;
-			if (key.compareTo(currentNode.key) > 0) currentNode = root.right;
+			if (key.compareTo(currentNode.key) < 0) currentNode = currentNode.left;
+			if (key.compareTo(currentNode.key) > 0) currentNode = currentNode.right;
 			if (key.compareTo(currentNode.key) == 0) return currentNode.value;
 		}
 		return null;
@@ -45,8 +45,14 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 //	}
 	
 	public static void main(String[] args) {
-		BinarySearchTree<Integer, String> testBST = new BinarySearchTree<Integer, String>();
-		testBST.put(0, "Java");
-		
+		BinarySearchTree<Integer, Integer> testBST = new BinarySearchTree<Integer, Integer>();
+		int[] input = new int[16];
+		for (int i = 0; i < 16; i++) {
+			input[i] = 16 - i;
+		}
+		for (int i = 0; i < 16; i++) {
+			testBST.put(i, input[i]);
+		}
+		System.out.println(testBST.get(4));
 	}
 }
