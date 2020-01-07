@@ -84,21 +84,21 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 	}
 	
 	public Key minimum() {
-		Node currentNode = this.root;
-		if (currentNode == null) return null;
-		while(currentNode.left != null) {
-			currentNode = currentNode.left;
-		}
-		return currentNode.key;
+		return minimum(root).key;
+	}
+	
+	private Node minimum(Node node) {
+		if (node.left == null) return node;
+		return minimum(node.left);
 	}
 	
 	public Key maximum() {
-		Node currentNode = this.root;
-		if (currentNode == null) return null;
-		while(currentNode.right != null) {
-			currentNode = currentNode.right;
-		}
-		return currentNode.key;
+		return maximum(root).key;
+	}
+	
+	private Node maximum(Node node) {
+		if (node.right == null) return node;
+		return maximum(node.right);
 	}
 	
 	public void deleteMin() {
@@ -119,6 +119,26 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 	private Node deleteMax(Node node) {
 		if (node.right == null) return node.left;
 		node.right = deleteMax(node.right);
+		node.count = 1 + size(node.left) + size(node.right);
+		return node;
+	}
+	
+	public void delete(Key key) {
+		root = delete(root, key);
+	}
+	
+	private Node delete(Node node, Key key) {
+		if (node == null) return null;
+		if (key.compareTo(node.key) < 0) node.left = delete(node.left, key);
+		else if (key.compareTo(node.key) > 0) node.right = delete(node.right, key);
+		else {
+			if (node.right == null) return node.left;
+			if (node.left == null) return node.right;
+			Node t = node;
+			node = minimum(t.right);
+			node.right = deleteMin(t.right);
+			node.left = t.left;
+		}
 		node.count = 1 + size(node.left) + size(node.right);
 		return node;
 	}
@@ -163,8 +183,8 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 	
 	public static void main(String[] args) {
 		BinarySearchTree<Integer, Integer> testBST = new BinarySearchTree<Integer, Integer>();
-		System.out.println(testBST.minimum());
-		System.out.println(testBST.maximum());
+//		System.out.println(testBST.minimum());
+//		System.out.println(testBST.maximum());
 		int[] input = new int[5];
 		for (int i = 0; i < 5; i++) {
 			input[i] = 5 - i;
@@ -181,13 +201,17 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 		System.out.println(testBST.size());
 		System.out.println(testBST.rank(0));
 		System.out.println(testBST.select(3));
+		System.out.println("-------");
+		testBST.delete(3);
 		for (Integer k : testBST.keys()) {
 			System.out.println(k);
 		}
+		System.out.println("-------");
 		testBST.deleteMin();
 		for (Integer k : testBST.keys()) {
 			System.out.println(k);
 		}
+		System.out.println("-------");
 		testBST.deleteMax();
 		for (Integer k : testBST.keys()) {
 			System.out.println(k);
