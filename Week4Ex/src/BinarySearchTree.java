@@ -101,8 +101,26 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 		return currentNode.key;
 	}
 	
-	public void delete(Key key) {
-		
+	public void deleteMin() {
+		root = deleteMin(root);
+	}
+	
+	private Node deleteMin(Node node) {
+		if (node.left == null) return node.right;
+		node.left = deleteMin(node.left);
+		node.count = 1 + size(node.left) + size(node.right);
+		return node;
+	}
+	
+	public void deleteMax() {
+		root = deleteMax(root);
+	}
+	
+	private Node deleteMax(Node node) {
+		if (node.right == null) return node.left;
+		node.right = deleteMax(node.right);
+		node.count = 1 + size(node.left) + size(node.right);
+		return node;
 	}
 	
 	// Return the number of keys in the symbol table strictly less than key
@@ -163,6 +181,14 @@ public class BinarySearchTree <Key extends Comparable<Key>, Value>{
 		System.out.println(testBST.size());
 		System.out.println(testBST.rank(0));
 		System.out.println(testBST.select(3));
+		for (Integer k : testBST.keys()) {
+			System.out.println(k);
+		}
+		testBST.deleteMin();
+		for (Integer k : testBST.keys()) {
+			System.out.println(k);
+		}
+		testBST.deleteMax();
 		for (Integer k : testBST.keys()) {
 			System.out.println(k);
 		}
