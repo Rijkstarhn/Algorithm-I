@@ -73,10 +73,16 @@ public class PointSET {
 	public static void main(String[] args) {
 		PointSET testSet = new PointSET();
 		System.out.println(testSet.isEmpty());
-		Point2D point2d = new Point2D(0.2, 0.5);
-		testSet.insert(point2d);
+		Point2D p1 = new Point2D(0.1, 0.6);
+		Point2D p2 = new Point2D(0.8, 0.3);
+		Point2D p3 = new Point2D(0.2, 0.4);
+		Point2D p4 = new Point2D(0.5, 0.7);
+		testSet.insert(p1);
+		testSet.insert(p2);
+		testSet.insert(p3);
+		testSet.insert(p4);
 		System.out.println(testSet.contains(new Point2D(0.2, 0.1)));
-		System.out.println(testSet.contains(new Point2D(0.2, 0.5)));
+		System.out.println(testSet.contains(new Point2D(0.2, 0.4)));
 		System.out.println(testSet.size());
 		System.out.println(testSet.isEmpty());
 		testSet.insert(new Point2D(0.2, 0.7));
