@@ -17,10 +17,21 @@ public class KdTree {
 		private RectHV rect;
 		private boolean orientation;// false vertical; true horizontal
 		
-		public Node(Point2D inputP, boolean orientation) {
+		public Node(Point2D inputP, Node parent, boolean direction) {
 			this.p = inputP;
-			this.orientation = !orientation;
-			//if (inputP == null) this.rect = new RectHV(0, 0, 1, 1);
+			if (parent == null) this.orientation = false;
+			else this.orientation = !parent.orientation;
+			if (parent == null) this.rect = new RectHV(0.0, 0.0, 1.0, 1.0);
+			else {
+				if (parent.orientation) {
+					if (direction) this.rect = new RectHV(0.0, 0.0, parent.rect.xmax(), parent.p.y());
+					else this.rect = new RectHV(0, parent.p.y(), parent.rect.xmax(), parent.rect.ymax());
+				}
+				else {
+					if (direction) this.rect = new RectHV(0.0, 0.0, parent.p.x(), parent.rect.ymax());
+					else this.rect = new RectHV(parent.p.x(), 0.0, parent.rect.xmax(), parent.rect.ymax());
+				}
+			}
 		}
 		
 		public int compareTo(Node that) {
@@ -51,16 +62,16 @@ public class KdTree {
 	}
 	
 	public void insert(Node node) {
-		root = insert(node, root, true);
+		root = insert(node, root, null, false);
 	}
 	
-	private Node insert(Node node, Node root, boolean orientation) {
+	private Node insert(Node node, Node root, Node parent, boolean direction) {
 		if (root == null) {
 			count ++;
-			return new Node(node.p, orientation);
+			return new Node(node.p, parent, direction);
 		}
-		if (node.compareTo(root) < 0) root.lb = insert(node, root.lb, root.orientation);
-		else if (node.compareTo(root) > 0) root.rt = insert(node, root.rt, root.orientation);
+		if (node.compareTo(root) < 0) root.lb = insert(node, root.lb, root, LB);
+		else if (node.compareTo(root) > 0) root.rt = insert(node, root.rt, root, RT);
 		return root;
 	}
 	
@@ -78,7 +89,7 @@ public class KdTree {
 		draw(root, null, false);
 	}
 	
-	private void draw(Node root, Node son, Boolean direction) {
+	private void draw(Node root, Node son, boolean direction) {
 		if (root == null) return;
 		if (son == null) {
 			StdDraw.setPenRadius(0.02);
@@ -127,17 +138,17 @@ public class KdTree {
 	
 	public static void main(String[] args) {
 		KdTree tree = new KdTree();
-		Node node1 = tree.new Node(new Point2D(0.7, 0.2),false);
-		Node node2 = tree.new Node(new Point2D(0.5, 0.4),false);
-		Node node3 = tree.new Node(new Point2D(0.2, 0.3),false);
-		Node node4 = tree.new Node(new Point2D(0.4, 0.7),false);
-		Node node5 = tree.new Node(new Point2D(0.9, 0.6),false);
+		Node node1 = tree.new Node(new Point2D(0.7, 0.2),null, false);
+		Node node2 = tree.new Node(new Point2D(0.5, 0.4),null, false);
+		Node node3 = tree.new Node(new Point2D(0.2, 0.3),null, false);
+		Node node4 = tree.new Node(new Point2D(0.4, 0.7),null, false);
+		Node node5 = tree.new Node(new Point2D(0.9, 0.6),null, false);
 		tree.insert(node1);
 		tree.insert(node2);
 		tree.insert(node3);
 		tree.insert(node4);
 		tree.insert(node5);
-		System.out.println(tree.contains(tree.new Node(new Point2D(0.9, 0.3),false)));
+		System.out.println(tree.contains(tree.new Node(new Point2D(0.9, 0.3),null, false)));
 		tree.draw();
 	}
 	
