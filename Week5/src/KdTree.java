@@ -1,10 +1,13 @@
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
+import edu.princeton.cs.algs4.StdDraw;
 
 public class KdTree {
 	
 	private Node root;
 	private int count;
+	public static final boolean LB = true;
+	public static final boolean RT = false;
 	
 	class Node implements Comparable<Node> {
 		
@@ -72,12 +75,53 @@ public class KdTree {
 	}
 	
 	public void draw() {
-		draw(root);
+		draw(root, null, false);
 	}
 	
-	private void draw(Node root) {
+	private void draw(Node root, Node son, Boolean direction) {
 		if (root == null) return;
-		if (root.lb != null) draw(root.lb);
+		if (son == null) {
+			StdDraw.setPenRadius(0.02);
+			StdDraw.setPenColor(StdDraw.BLACK);
+			root.p.draw();
+			StdDraw.setPenRadius(0.005);
+			StdDraw.setPenColor(StdDraw.RED);
+			root.p.drawTo(new Point2D(root.p.x(), 0.0));
+			root.p.drawTo(new Point2D(root.p.x(), 1.0));
+			son = root;
+		}
+		else {
+			StdDraw.setPenRadius(0.02);
+			StdDraw.setPenColor(StdDraw.BLACK);
+			son.p.draw();
+			StdDraw.setPenRadius(0.005);
+			if (son.orientation) {
+				StdDraw.setPenColor(StdDraw.BLUE);
+				if (direction) {
+					son.p.drawTo(new Point2D(0.0, son.p.y()));
+					son.p.drawTo(new Point2D(root.p.x(), son.p.y()));
+				}
+				else {
+					son.p.drawTo(new Point2D(root.p.x(), son.p.y()));
+					son.p.drawTo(new Point2D(1.0, son.p.y()));
+				}
+			}
+			else {
+				StdDraw.setPenColor(StdDraw.RED);
+				if (direction) {
+					son.p.drawTo(new Point2D(son.p.x(), 0.0));
+					son.p.drawTo(new Point2D(son.p.x(), root.p.y()));
+				}
+				else {
+					son.p.drawTo(new Point2D(son.p.x(), 1.0));
+					son.p.drawTo(new Point2D(son.p.x(), root.p.y()));
+				}
+				
+			}
+		}
+		if (son.lb != null) draw(son, son.lb, LB);
+		if (son.rt != null) draw(son, son.rt, RT);
+		return;
 	}
 	
 	
@@ -94,6 +138,7 @@ public class KdTree {
 		tree.insert(node4);
 		tree.insert(node5);
 		System.out.println(tree.contains(tree.new Node(new Point2D(0.9, 0.3),false)));
+		tree.draw();
 	}
 	
 }
