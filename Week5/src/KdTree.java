@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
@@ -138,7 +137,7 @@ public class KdTree {
 	}
 	
 	public Iterable<Node> range(RectHV rect) {
-		if (rect == null) throw new IllegalArgumentException("rectang should not be null!");
+		if (rect == null) throw new IllegalArgumentException("rectangle should not be null!");
 		ArrayList<Node> insideNode = new ArrayList<Node>();
 		range(rect, root, insideNode);
 		return insideNode;
@@ -154,6 +153,43 @@ public class KdTree {
 		else return;
 	}
 	
+	public Point2D nearest(Point2D query) {
+		if (query == null) throw new IllegalArgumentException("query point should not be null!");
+		if (root == null) return null;
+		Point2D nearestPoint =  nearest(query, root, query, query.distanceSquaredTo(root.p));
+		return nearestPoint;
+	}
+	
+	private Point2D nearest(Point2D query, Node root, Point2D nearest, double nearestDistance) {
+		if (root == null) return nearest;
+		double distance;
+		distance = query.distanceSquaredTo(root.p);
+		if (distance <= nearestDistance) {
+			nearestDistance = distance;
+			nearest = root.p;
+		}
+		if (root.lb != null && root.rt != null) {
+			if (root.lb.rect.distanceSquaredTo(query) < nearestDistance) {
+				if (root.rt.rect.distanceSquaredTo(query) < nearestDistance) {
+					if (root.orientation) {
+						if (query.y() - root.p.y() < 0) nearest = nearest(query, root.lb, nearest, nearestDistance);
+						else nearest = nearest(query, root.rt, nearest, nearestDistance); 
+					}
+					else {
+						if (query.x() - root.p.x() < 0) nearest = nearest(query, root.lb, nearest, nearestDistance);
+						else nearest = nearest(query, root.rt, nearest, nearestDistance);
+					}
+				}
+				else nearest = nearest(query, root.lb, nearest, nearestDistance);
+			}
+			else if (root.rt.rect.distanceSquaredTo(query) < nearestDistance) nearest = nearest(query, root.rt, nearest, nearestDistance);
+			else return nearest;
+		}
+		else if (root.lb != null && root.rt == null) nearest = nearest(query, root.lb, nearest, nearestDistance);
+		else if (root.lb == null && root.rt != null) nearest = nearest(query, root.rt, nearest, nearestDistance);
+		return nearest;
+	}
+	
 	public static void main(String[] args) {
 		KdTree tree = new KdTree();
 		Node node1 = tree.new Node(new Point2D(0.7, 0.2),null, false);
@@ -167,12 +203,15 @@ public class KdTree {
 		tree.insert(node4);
 		tree.insert(node5);
 		System.out.println(tree.contains(tree.new Node(new Point2D(0.9, 0.3),null, false)));
-		tree.draw();
+		//tree.draw();
 		Iterable<Node> a = new ArrayList<Node>();
 		a = tree.range(new RectHV(0.5, 0.2, 0.7, 0.4));
 		for (Node node : a) {
 			System.out.println(node.p);
 		}
+		Point2D p = new Point2D(0.5, 0.5);
+		System.out.println("nearest:");
+		System.out.println(tree.nearest(p));
 	}
 	
 }

@@ -44,7 +44,7 @@ public class PointSET {
 	
 	// all points that are inside the rectangle (or on the boundary) 
 	public Iterable<Point2D> range(RectHV rect) {
-		if (rect == null) throw new IllegalArgumentException("rectang should not be null!");
+		if (rect == null) throw new IllegalArgumentException("rectangle should not be null!");
 		ArrayList<Point2D> insidePoint = new ArrayList<Point2D>();
 		for (Point2D p : this.pointsSet) {
 			if (p.x() == 0.0 || p.x() == 1.0 || p.y() == 0.0 || p.y() == 1.0) insidePoint.add(p);
