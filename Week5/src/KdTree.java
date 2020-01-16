@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
 import edu.princeton.cs.algs4.StdDraw;
@@ -135,6 +137,22 @@ public class KdTree {
 		return;
 	}
 	
+	public Iterable<Node> range(RectHV rect) {
+		if (rect == null) throw new IllegalArgumentException("rectang should not be null!");
+		ArrayList<Node> insideNode = new ArrayList<Node>();
+		range(rect, root, insideNode);
+		return insideNode;
+		}
+	
+	private void range(RectHV rect, Node root, ArrayList<Node> insideNode) {
+		if (root == null) return;
+		if (rect.contains(root.p)) insideNode.add(root);
+		if (rect.intersects(root.rect)) {
+			range(rect, root.lb, insideNode);
+			range(rect, root.rt, insideNode);
+		}
+		else return;
+	}
 	
 	public static void main(String[] args) {
 		KdTree tree = new KdTree();
@@ -150,6 +168,11 @@ public class KdTree {
 		tree.insert(node5);
 		System.out.println(tree.contains(tree.new Node(new Point2D(0.9, 0.3),null, false)));
 		tree.draw();
+		Iterable<Node> a = new ArrayList<Node>();
+		a = tree.range(new RectHV(0.5, 0.2, 0.7, 0.4));
+		for (Node node : a) {
+			System.out.println(node.p);
+		}
 	}
 	
 }
