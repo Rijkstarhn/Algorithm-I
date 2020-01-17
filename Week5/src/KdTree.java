@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
@@ -9,11 +8,11 @@ public class KdTree {
 	
 	private Node root;
 	private int count;
-	public static final boolean LB = true;
-	public static final boolean RT = false;
+	private static final boolean LB = true;
+	private static final boolean RT = false;
 	private double nearestDistance;
 	
-	class Node implements Comparable<Node> {
+	private class Node implements Comparable<Node> {
 		
 		private Point2D p;
 		private Node lb;
@@ -66,6 +65,7 @@ public class KdTree {
 	}
 	
 	public void insert(Point2D p) {
+		if (p == null) throw new IllegalArgumentException("point should not be null!");
 		root = insert(p, root, null, false);
 	}
 	
@@ -74,23 +74,36 @@ public class KdTree {
 			count ++;
 			return new Node(p, parent, direction);
 		}
-		if (root.orientation) {
-			if (p.y() < root.p.y()) root.lb = insert(p, root.lb, root, LB);
-			else root.rt = insert(p, root.rt, root, RT);
+		if (! p.equals(root.p)) {
+			if (root.orientation) {
+				if (p.y() < root.p.y()) root.lb = insert(p, root.lb, root, LB);
+				else root.rt = insert(p, root.rt, root, RT);
+			}
+			else {
+				if (p.x() < root.p.x()) root.lb = insert(p, root.lb, root, LB);
+				else root.rt = insert(p, root.rt, root, RT);
+			}
+			return root;
 		}
-		else {
-			if (p.x() < root.p.x()) root.lb = insert(p, root.lb, root, LB);
-			else root.rt = insert(p, root.rt, root, RT);
-		}
-		return root;
+		else return root;
 	}
 	
-	public boolean contains(Node node) {
-		Node x = root;
-		while (x != null) {
-			if (node.compareTo(x) < 0) x = x.lb;
-			else if (node.compareTo(x) > 0) x = x.rt;
-			else return true;
+	public boolean contains(Point2D p) {
+		if (p == null) throw new IllegalArgumentException("point should not be null!");
+		Node t = root;
+		while (t != null) {
+			if (t.orientation) {
+				if (p.y() < t.p.y()) t = t.lb;
+				else if (p.y() > t.p.y()) t = t.rt;
+				else if (p.x() != t.p.x()) t = t.rt;
+				else return true;
+			}
+			else {
+				if (p.x() < t.p.x()) t = t.lb;
+				else if (p.x() > t.p.x()) t = t.rt;
+				else if (p.y() != t.p.y()) t = t.rt;
+				else return true;
+			}
 		}
 		return false;
 	}
@@ -134,10 +147,8 @@ public class KdTree {
 	private void range(RectHV rect, Node root, ArrayList<Point2D> insideNode) {
 		if (root == null) return;
 		if (rect.contains(root.p)) insideNode.add(root.p);
-		if (rect.intersects(root.rect)) {
-			range(rect, root.lb, insideNode);
-			range(rect, root.rt, insideNode);
-		}
+		if (root.lb != null && rect.intersects(root.lb.rect)) range(rect, root.lb, insideNode);
+		if (root.rt != null && rect.intersects(root.rt.rect)) range(rect, root.rt, insideNode);
 		else return;
 	}
 	
@@ -150,93 +161,62 @@ public class KdTree {
 		return nearestPoint;
 	}
 	
-//	private Point2D nearest(Point2D query, Node root, Point2D nearest, double nearestDistance) {
-//		if (root == null) return nearest;
-//		double distance;
-//		distance = query.distanceSquaredTo(root.p);
-//		if (distance <= nearestDistance) {
-//			nearestDistance = distance;
-//			nearest = root.p;
-//		}
-//		if (root.lb != null && root.rt != null) {
-//			if (root.lb.rect.distanceSquaredTo(query) < nearestDistance) {
-//				if (root.rt.rect.distanceSquaredTo(query) < nearestDistance) {
-//					if (root.orientation) {
-//						// if query is closer to the lb, then search lb first
-//						if (query.y() - root.p.y() < 0) {
-//							nearest = nearest(query, root.lb, nearest, nearestDistance);
-//							nearest = nearest(query, root.rt, nearest, nearestDistance);
-//							}
-//						// if query is closer to the rt, then search rt first
-//						else {
-//							nearest = nearest(query, root.rt, nearest, nearestDistance);
-//							nearest = nearest(query, root.lb, nearest, nearestDistance);
-//						}
-//					}
-//					else {
-//						// if query is closer to the lb, then search lb first
-//						if (query.x() - root.p.x() < 0) {
-//							nearest = nearest(query, root.lb, nearest, nearestDistance);
-//							nearest = nearest(query, root.rt, nearest, nearestDistance);
-//						}
-//						// if query is closer to the rt, then search rt first
-//						else {
-//							nearest = nearest(query, root.rt, nearest, nearestDistance);
-//							nearest = nearest(query, root.lb, nearest, nearestDistance);
-//						}
-//					}
-//				}
-//				else nearest = nearest(query, root.lb, nearest, nearestDistance);
-//			}
-//			else if (root.rt.rect.distanceSquaredTo(query) < nearestDistance) nearest = nearest(query, root.rt, nearest, nearestDistance);
-//		}
-//		else if (root.lb != null && root.rt == null) nearest = nearest(query, root.lb, nearest, nearestDistance);
-//		else if (root.lb == null && root.rt != null) nearest = nearest(query, root.rt, nearest, nearestDistance);
-//		return nearest;
-//	}
-	
 	private Point2D nearest(Point2D query, Node root, Point2D nearest) {
 		if (root == null) return nearest;
 		double distance;
+		double lbDistance;
+		double rtDistance;
 		distance = query.distanceSquaredTo(root.p);
 		if (distance <= nearestDistance) {
 			nearestDistance = distance;
 			nearest = root.p;
 		}
+		
 		if (root.lb != null && root.rt != null) {
-			if (root.lb.rect.distanceSquaredTo(query) < nearestDistance) {
-				if (root.rt.rect.distanceSquaredTo(query) < nearestDistance) {
+			lbDistance = root.lb.rect.distanceSquaredTo(query);
+			rtDistance = root.rt.rect.distanceSquaredTo(query);
+			if (lbDistance < nearestDistance) {
+				if (rtDistance < nearestDistance) {
 					if (root.orientation) {
 						// if query is closer to the lb, then search lb first
 						if (query.y() - root.p.y() < 0) {
 							nearest = nearest(query, root.lb, nearest);
-							nearest = nearest(query, root.rt, nearest);
+							// if the other subtree is farer than the nearest point, then don't need to search the other subtree
+							if (rtDistance < nearestDistance) nearest = nearest(query, root.rt, nearest);
 							}
 						// if query is closer to the rt, then search rt first
 						else {
 							nearest = nearest(query, root.rt, nearest);
-							nearest = nearest(query, root.lb, nearest);
+							if (lbDistance < nearestDistance) nearest = nearest(query, root.lb, nearest);
 						}
 					}
 					else {
 						// if query is closer to the lb, then search lb first
 						if (query.x() - root.p.x() < 0) {
 							nearest = nearest(query, root.lb, nearest);
-							nearest = nearest(query, root.rt, nearest);
+							if (rtDistance < nearestDistance) nearest = nearest(query, root.rt, nearest);
 						}
 						// if query is closer to the rt, then search rt first
 						else {
 							nearest = nearest(query, root.rt, nearest);
-							nearest = nearest(query, root.lb, nearest);
+							if (lbDistance < nearestDistance) nearest = nearest(query, root.lb, nearest);
 						}
 					}
 				}
-				else nearest = nearest(query, root.lb, nearest);
+				else {
+					if (lbDistance < nearestDistance) nearest = nearest(query, root.lb, nearest);
+				}
 			}
-			else if (root.rt.rect.distanceSquaredTo(query) < nearestDistance) nearest = nearest(query, root.rt, nearest);
+			else if (rtDistance < nearestDistance) nearest = nearest(query, root.rt, nearest);
 		}
-		else if (root.lb != null && root.rt == null) nearest = nearest(query, root.lb, nearest);
-		else if (root.lb == null && root.rt != null) nearest = nearest(query, root.rt, nearest);
+		else if (root.lb != null && root.rt == null) {
+			lbDistance = root.lb.rect.distanceSquaredTo(query);
+			if (lbDistance < nearestDistance) nearest = nearest(query, root.lb, nearest);
+		}
+		else if (root.lb == null && root.rt != null) {
+			rtDistance = root.rt.rect.distanceSquaredTo(query);
+			if (rtDistance < nearestDistance) nearest = nearest(query, root.rt, nearest);
+		}
 		return nearest;
 	}
 	
@@ -251,21 +231,47 @@ public class KdTree {
             Point2D p = new Point2D(x, y);
             tree.insert(p);
         }
-
-		System.out.println(tree.contains(tree.new Node(new Point2D(0.9, 0.3),null, false)));
-		tree.draw();
-		Iterable<Point2D> a = new ArrayList<Point2D>();
-		RectHV r = new RectHV(0.372, 0.497, 0.7, 0.8);
-		a = tree.range(r);
-		r.draw();
-		for (Point2D node : a) {
-			System.out.println(node);
-		}
-		Point2D p = new Point2D(0.2, 0.2);
-		p.draw();
+//		KdTree tree = new KdTree();
+//		tree.insert(new Point2D(0.0, 0.0));
+//		RectHV r0 = new RectHV(0.0, 0.0, 1.0, 0.0);
+//		Iterable<Point2D> a0 = new ArrayList<Point2D>();
+//		a0 = tree.range(r0);
+//		for (Point2D node : a0) {
+//			System.out.println(node);
+//		}
+//		r0.draw();
+//		tree.draw();
+//		tree.insert(new Point2D(1.0, 0.0));
+//		r0 = new RectHV(0.0, 0.0, 1.0, 1.0);
+//		a0 = tree.range(r0);
+//		for (Point2D node : a0) {
+//			System.out.println(node);
+//		}
+//		tree.insert(new Point2D(1.0, 0.0));
+//		r0 = new RectHV(0.0, 0.0, 1.0, 1.0);
+//		a0 = tree.range(r0);
+//		for (Point2D node : a0) {
+//			System.out.println(node);
+//		}
+//		tree.insert(new Point2D(0.7, 0.2));
+//		tree.insert(new Point2D(0.5, 0.4));
+//		tree.insert(new Point2D(0.2, 0.3));
+//		tree.insert(new Point2D(0.4, 0.7));
+//		tree.insert(new Point2D(0.9, 0.6));
+//        System.out.println(tree.size());
+//		System.out.println(tree.contains(new Point2D(0.144, 0.179)));
+//		tree.draw();
+//		Iterable<Point2D> a = new ArrayList<Point2D>();
+//		RectHV r = new RectHV(0.73, 0.35, 0.79, 0.56);
+//		a = tree.range(r);
+//		r.draw();
+//		for (Point2D node : a) {
+//			System.out.println(node);
+//		}
+		Point2D p = new Point2D(0.43, 0.52);
+//		p.draw();
 		System.out.println("nearest:");
 		System.out.println(tree.nearest(p));
 	}
-	
 }
 
