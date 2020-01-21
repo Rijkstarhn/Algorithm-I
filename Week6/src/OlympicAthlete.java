@@ -3,9 +3,20 @@ import java.util.HashSet;
 public class OlympicAthlete {
 	private int age;
 	private String name;
+	// test for defensive copy
+	private int[] ID;
+	
 	public OlympicAthlete(String name, int age) {
         this.name = name;
         this.age = age;
+    }
+	
+	// test for defensive copy
+	public OlympicAthlete(String name, int age, int[] id) {
+        this.name = name;
+        this.age = age;
+        this.ID = id;
+        ID[0] = 5;
     }
 
     public String toString() {
@@ -59,5 +70,12 @@ public class OlympicAthlete {
         System.out.printf("p1.equals(p4) : %s; p1(%d) p4(%d)\n", p1.equals(p4), p1.hashCode(), p4.hashCode());
         // ¥Ú”°set
         System.out.printf("set:%s\n", set);
+        // test for defensive copy
+        int[] id = {3,4,0,8};
+        System.out.println(id[0]);
+        OlympicAthlete defcopy = new OlympicAthlete("e",3, id);
+        System.out.println(id[0]);
+        id[3] = 7;
+        System.out.println(defcopy.ID[3]);
 	}
 }
